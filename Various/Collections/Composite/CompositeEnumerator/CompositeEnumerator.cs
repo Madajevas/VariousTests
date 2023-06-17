@@ -9,7 +9,7 @@ namespace Various.Collections.Composite.CompositeEnumerator
         private int enumeratingCollection = -1;
         private IEnumerator<T>? currentEnumerator;
 
-        public T Current { get; private set; } = default!;
+        public T Current => currentEnumerator!.Current;
         object IEnumerator.Current => Current!;
 
         public CompositeEnumerator(params IEnumerable<T>[] enumerables)
@@ -33,14 +33,12 @@ namespace Various.Collections.Composite.CompositeEnumerator
 
             if (currentEnumerator.MoveNext())
             {
-                Current = currentEnumerator.Current;
                 return true;
             }
             else
             {
                 currentEnumerator.Dispose();
                 currentEnumerator = null;
-                Current = default!;
                 return MoveNext();
             }
         }
@@ -48,7 +46,6 @@ namespace Various.Collections.Composite.CompositeEnumerator
         public void Reset()
         {
             Dispose();
-            Current = default!;
             enumeratingCollection = -1;
         }
 
