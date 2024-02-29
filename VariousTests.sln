@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VariousBenchmarks", "Variou
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SourceGeneration", "SourceGeneration", "{A1B44D2E-1E6E-48B8-BC7B-C6A51559B011}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "SourceGeneration\Sandbox\Sandbox.csproj", "{E0130416-7A43-42E5-A88E-A18133211BE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sandbox", "SourceGeneration\Sandbox\Sandbox.csproj", "{E0130416-7A43-42E5-A88E-A18133211BE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generator", "SourceGeneration\Generator\Generator.csproj", "{5B1F630E-943D-4331-959B-F893EA7D1118}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Generator", "SourceGeneration\Generator\Generator.csproj", "{5B1F630E-943D-4331-959B-F893EA7D1118}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generator.Abstractions", "SourceGeneration\Generator.Abstractions\Generator.Abstractions.csproj", "{9624A0E2-4D29-4FB9-A4E0-C0EF798471DE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{5B1F630E-943D-4331-959B-F893EA7D1118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B1F630E-943D-4331-959B-F893EA7D1118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B1F630E-943D-4331-959B-F893EA7D1118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9624A0E2-4D29-4FB9-A4E0-C0EF798471DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9624A0E2-4D29-4FB9-A4E0-C0EF798471DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9624A0E2-4D29-4FB9-A4E0-C0EF798471DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9624A0E2-4D29-4FB9-A4E0-C0EF798471DE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,6 +54,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{E0130416-7A43-42E5-A88E-A18133211BE0} = {A1B44D2E-1E6E-48B8-BC7B-C6A51559B011}
 		{5B1F630E-943D-4331-959B-F893EA7D1118} = {A1B44D2E-1E6E-48B8-BC7B-C6A51559B011}
+		{9624A0E2-4D29-4FB9-A4E0-C0EF798471DE} = {A1B44D2E-1E6E-48B8-BC7B-C6A51559B011}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {873E67AD-FBBB-4BC2-ACA6-66204E92B37B}
