@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Generator
 {
@@ -22,6 +23,7 @@ namespace Generator
                     .GetSemanticModel(typeNode.Item1.SyntaxTree)
                     .GetDeclaredSymbol(typeNode.Item1);
                 var sourceType = typeNodeSymbol.GetAttributes().Single().AttributeClass.TypeArguments.Single();
+                var members = sourceType.GetMembers().Where(m => m.Kind == SymbolKind.Field).ToImmutableArray();
             }
         }
 

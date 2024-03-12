@@ -3,9 +3,11 @@ using Generator.Abstractions;
 
 Console.WriteLine("Hello, World!");
 
-class SomeEnum
+enum SomeEnum
 {
-    public int Value { get; set; }
+    None,
+    OptionOne,
+    OptionTwo,
 }
 
 [GenerateViewModel<SomeEnum>]
