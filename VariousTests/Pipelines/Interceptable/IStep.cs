@@ -2,13 +2,13 @@
 {
     interface IStep
     {
-        dynamic Process(dynamic input);
+        ValueTask<dynamic> Process(dynamic input, CancellationToken cancellationToken);
     }
 
     interface IStep<TInput, TOutput> : IStep
     {
-        dynamic IStep.Process(dynamic input) => Process(input);
+        async ValueTask<dynamic> IStep.Process(dynamic input, CancellationToken cancellationToken) => await Process(input, cancellationToken);
 
-        TOutput Process(TInput input);
+        ValueTask<TOutput> Process(TInput input, CancellationToken cancellationToken);
     }
 }

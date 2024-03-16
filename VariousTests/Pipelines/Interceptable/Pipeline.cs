@@ -11,14 +11,14 @@
             this.serviceProvider = serviceProvider;
         }
 
-        public virtual TOutput Execute(TInput input)
+        public virtual async ValueTask<TOutput> Execute(TInput input, CancellationToken cancellationToken)
         {
             dynamic nextInput = input;
             foreach(var stepType in stepTypes)
             {
                 var step = serviceProvider.GetService(stepType) as IStep ?? throw new InvalidOperationException("Pipeline step not registered.");
 
-                nextInput = step.Process(nextInput);
+                nextInput = await step.Process(nextInput, cancellationToken);
             }
 
             return (TOutput)nextInput!;

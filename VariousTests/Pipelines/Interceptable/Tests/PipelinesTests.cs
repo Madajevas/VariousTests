@@ -6,12 +6,12 @@ namespace VariousTests.Pipelines.Interceptable.Tests
     {
         class DoublePipelineStep : IStep<int, long>
         {
-            public long Process(int input) => input * 2;
+            public ValueTask<long> Process(int input, CancellationToken cancellationToken) => ValueTask.FromResult(input * 2L);
         }
 
         class ToStringPipelineStep : IStep<long, string>
         {
-            public string Process(long input) => input.ToString();
+            public ValueTask<string> Process(long input, CancellationToken cancellationToken) => ValueTask.FromResult(input.ToString());
         }
 
         private Pipeline<int, string> pipeline = null!;
@@ -31,18 +31,18 @@ namespace VariousTests.Pipelines.Interceptable.Tests
         }
 
         [Test]
-        public void PipelineBuilder_BuildsPipelineThatInvokesAllSteps()
+        public async Task PipelineBuilder_BuildsPipelineThatInvokesAllSteps()
         {
-            var result = pipeline.Execute(11);
+            var result = await pipeline.Execute(11, default);
 
             Assert.That(result, Is.EqualTo("22"));
         }
 
         [Test]
-        public void InvokingSamePipelineAgain_ProducesCorrectResult()
+        public async Task InvokingSamePipelineAgain_ProducesCorrectResult()
         {
-            pipeline.Execute(11);
-            var result = pipeline.Execute(2);
+            await pipeline.Execute(11, default);
+            var result = await pipeline.Execute(2, default);
 
             Assert.That(result, Is.EqualTo("4"));
         }
