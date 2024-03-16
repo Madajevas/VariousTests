@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VariousTests.Pipelines.Interceptable.Tests
+﻿namespace VariousTests.Pipelines.Interceptable.Tests
 {
     internal class PipelinesTests
     {
@@ -21,7 +15,7 @@ namespace VariousTests.Pipelines.Interceptable.Tests
         [Test]
         public void PipelineBuilder_BuildsPipelineThatInvokesAllSteps()
         {
-            var builder = InitialPipelineBuilder<int>.Create()
+            var builder = Pipeline.BeginBuilder<int>()
                 .AddStep<DoublePipelineStep, long>()
                 .AddStep<ToStringPipelineStep, string>();
             Pipeline<int, string> pipeline = builder.Build();
