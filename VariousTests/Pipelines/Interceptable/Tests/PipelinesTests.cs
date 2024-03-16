@@ -12,17 +12,32 @@
             public string Process(long input) => input.ToString();
         }
 
-        [Test]
-        public void PipelineBuilder_BuildsPipelineThatInvokesAllSteps()
+        private Pipeline<int, string> pipeline = null!;
+
+        [SetUp]
+        public void Setup()
         {
             var builder = Pipeline.BeginBuilder<int>()
                 .AddStep<DoublePipelineStep, long>()
                 .AddStep<ToStringPipelineStep, string>();
-            Pipeline<int, string> pipeline = builder.Build();
+            pipeline = builder.Build();
+        }
 
+        [Test]
+        public void PipelineBuilder_BuildsPipelineThatInvokesAllSteps()
+        {
             var result = pipeline.Execute(11);
 
             Assert.That(result, Is.EqualTo("22"));
+        }
+
+        [Test]
+        public void InvokingSamePipelineAgain_ProducesCorrectResult()
+        {
+            pipeline.Execute(11);
+            var result = pipeline.Execute(2);
+
+            Assert.That(result, Is.EqualTo("4"));
         }
     }
 }

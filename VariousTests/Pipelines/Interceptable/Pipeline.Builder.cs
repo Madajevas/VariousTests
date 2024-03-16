@@ -8,16 +8,16 @@
 
     class PipelineBuilder<TInput>
     {
-        private Queue<Type> stepTypes;
+        private List<Type> stepTypes;
 
         public PipelineBuilder()
         {
-            this.stepTypes = new Queue<Type>();
+            this.stepTypes = new List<Type>();
         }
 
         public PipelineBuilder<TInput, TOutput> AddStep<TStep, TOutput>() where TStep : IStep<TInput, TOutput>
         {
-            stepTypes.Enqueue(typeof(TStep));
+            stepTypes.Add(typeof(TStep));
 
             return new PipelineBuilder<TInput, TOutput>(stepTypes);
         }
@@ -25,16 +25,16 @@
 
     internal class PipelineBuilder<TFirst, TInput>
     {
-        private readonly Queue<Type> stepTypes;
+        private readonly List<Type> stepTypes;
 
-        public PipelineBuilder(Queue<Type> stepTypes)
+        public PipelineBuilder(List<Type> stepTypes)
         {
             this.stepTypes = stepTypes;
         }
 
         public PipelineBuilder<TFirst, TOutput> AddStep<TStep, TOutput>() where TStep : IStep<TInput, TOutput>
         {
-            stepTypes.Enqueue(typeof(TStep));
+            stepTypes.Add(typeof(TStep));
 
             return new PipelineBuilder<TFirst, TOutput>(stepTypes);
         }

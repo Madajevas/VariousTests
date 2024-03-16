@@ -1,18 +1,18 @@
 ﻿namespace VariousTests.Pipelines.Interceptable
 {
-    internal class Pipeline<TInput, TOutput>
+    class Pipeline<TInput, TOutput>
     {
-        private readonly Queue<Type> stepTypes;
+        private readonly List<Type> stepTypes;
 
-        public Pipeline(Queue<Type> stepTypes)
+        public Pipeline(List<Type> stepTypes)
         {
             this.stepTypes = stepTypes;
         }
 
-        public TOutput Execute(TInput input)
+        public virtual TOutput Execute(TInput input)
         {
             dynamic nextInput = input;
-            while (stepTypes.TryDequeue(out var stepType))
+            foreach(var stepType in stepTypes)
             {
                 var step = CreateHandler(stepType);
 
