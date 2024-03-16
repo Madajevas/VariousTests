@@ -1,4 +1,6 @@
-﻿namespace VariousTests.Pipelines.Interceptable.Tests
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace VariousTests.Pipelines.Interceptable.Tests
 {
     internal class PipelinesTests
     {
@@ -17,7 +19,12 @@
         [SetUp]
         public void Setup()
         {
-            var builder = Pipeline.BeginBuilder<int>()
+            var services = new ServiceCollection();
+            services.AddSingleton<DoublePipelineStep>();
+            services.AddSingleton<ToStringPipelineStep>();
+            var provider = services.BuildServiceProvider();
+
+            var builder = Pipeline.BeginBuilder<int>(provider)
                 .AddStep<DoublePipelineStep, long>()
                 .AddStep<ToStringPipelineStep, string>();
             pipeline = builder.Build();

@@ -3,10 +3,12 @@
     class Pipeline<TInput, TOutput>
     {
         private readonly List<Type> stepTypes;
+        private readonly IServiceProvider serviceProvider;
 
-        public Pipeline(List<Type> stepTypes)
+        public Pipeline(List<Type> stepTypes, IServiceProvider serviceProvider)
         {
             this.stepTypes = stepTypes;
+            this.serviceProvider = serviceProvider;
         }
 
         public virtual TOutput Execute(TInput input)
@@ -14,19 +16,12 @@
             dynamic nextInput = input;
             foreach(var stepType in stepTypes)
             {
-                var step = CreateHandler(stepType);
+                var step = serviceProvider.GetService(stepType) as IStep ?? throw new InvalidOperationException("Pipeline step not registered.");
 
                 nextInput = step.Process(nextInput);
             }
 
             return (TOutput)nextInput!;
-        }
-
-        private IStep CreateHandler(Type stepType)
-        {
-            var constructor = stepType.GetConstructors().Single(); // single constructor or die
-
-            return (IStep)constructor.Invoke(Array.Empty<object>());
         }
     }
 }
