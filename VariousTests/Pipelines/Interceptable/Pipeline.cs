@@ -16,6 +16,8 @@
             dynamic nextInput = input;
             foreach(var stepType in stepTypes)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var step = serviceProvider.GetService(stepType) as IStep ?? throw new InvalidOperationException("Pipeline step not registered.");
 
                 nextInput = await step.Process(nextInput, cancellationToken);
