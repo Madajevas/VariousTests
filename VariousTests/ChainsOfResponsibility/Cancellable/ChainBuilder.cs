@@ -20,7 +20,7 @@
 
         public IChain Build()
         {
-            return new ChainManager(handlerTypes, serviceProvider);
+            return new ChainInvoker(handlerTypes, serviceProvider);
         }
     }
 }

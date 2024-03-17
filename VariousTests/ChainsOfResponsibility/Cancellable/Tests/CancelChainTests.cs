@@ -61,5 +61,15 @@ namespace VariousTests.ChainsOfResponsibility.Cancellable.Tests
 
             Assert.That(() => resultTask, Throws.InstanceOf<OperationCanceledException>());
         }
+
+        [Test]
+        public void WhenSameChainIsInvokedMultipleTimes_ItAlwaysWorks()
+        {
+            firstHandlerBlocker.SetResult();
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            Assert.That(() => chain.Handle(404, cancellationTokenSource.Token), Throws.Nothing);
+            Assert.That(() => chain.Handle(404, cancellationTokenSource.Token), Throws.Nothing);
+        }
     }
 }
