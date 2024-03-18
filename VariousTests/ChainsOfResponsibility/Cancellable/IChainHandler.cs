@@ -1,6 +1,6 @@
 ﻿namespace VariousTests.ChainsOfResponsibility.Cancellable
 {
-    interface IChain
+    interface IChainHandler
     {
         ValueTask<string> Handle(int request, CancellationToken cancellationToken);
     }

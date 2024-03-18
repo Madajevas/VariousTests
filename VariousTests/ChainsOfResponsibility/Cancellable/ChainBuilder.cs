@@ -11,14 +11,14 @@
             this.handlerTypes = new Queue<Type>();
         }
 
-        public ChainBuilder Chain<THandler>() where THandler : IChain
+        public ChainBuilder Chain<THandler>() where THandler : IChainHandler
         {
             handlerTypes.Enqueue(typeof(THandler));
 
             return this;
         }
 
-        public IChain Build()
+        public IChainHandler Build()
         {
             return new ChainInvoker(handlerTypes, serviceProvider);
         }

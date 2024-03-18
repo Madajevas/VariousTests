@@ -1,6 +1,6 @@
 ﻿namespace VariousTests.ChainsOfResponsibility.Cancellable
 {
-    class ChainInvoker : IChain
+    class ChainInvoker : IChainHandler
     {
         private readonly Queue<Type> handlerTypes;
         private readonly IServiceProvider serviceProvider;

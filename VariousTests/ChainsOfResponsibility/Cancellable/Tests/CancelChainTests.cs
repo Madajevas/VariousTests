@@ -4,15 +4,15 @@ namespace VariousTests.ChainsOfResponsibility.Cancellable.Tests
 {
     internal class CancelChainTests
     {
-        private IChain chain;
+        private IChainHandler chain;
         private TaskCompletionSource firstHandlerBlocker;
 
-        class FirstHandler : IChain
+        class FirstHandler : IChainHandler
         {
-            private readonly IChain next;
+            private readonly IChainHandler next;
             private readonly Task waiter;
 
-            public FirstHandler(IChain next, Task waiter)
+            public FirstHandler(IChainHandler next, Task waiter)
             {
                 this.next = next;
                 this.waiter = waiter;
@@ -25,7 +25,7 @@ namespace VariousTests.ChainsOfResponsibility.Cancellable.Tests
             }
         }
 
-        class SecondHandler : IChain
+        class SecondHandler : IChainHandler
         {
             public ValueTask<string> Handle(int request, CancellationToken cancellationToken)
             {

@@ -1,6 +1,6 @@
 ﻿namespace VariousTests.ChainsOfResponsibility.Cancellable
 {
-    class ChainManager : IChain
+    class ChainManager : IChainHandler
     {
         private readonly Queue<Type> handlerTypes;
         private readonly IServiceProvider serviceProvider;
@@ -24,14 +24,14 @@
             throw new System.Diagnostics.UnreachableException("Chain was empty or last chain element injected another elements needlessly.");
         }
 
-        private IChain CreateHandler(Type handlerType)
+        private IChainHandler CreateHandler(Type handlerType)
         {
             var constructor = handlerType.GetConstructors().Single();
             var parameters = constructor.GetParameters()
                 .Select(p => p.ParameterType.IsAssignableFrom(this.GetType()) ? this : serviceProvider.GetService(p.ParameterType))
                 .ToArray();
 
-            return (IChain)constructor.Invoke(parameters);
+            return (IChainHandler)constructor.Invoke(parameters);
         }
     }
 }
