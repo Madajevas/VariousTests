@@ -68,8 +68,23 @@ namespace VariousTests.ChainsOfResponsibility.Cancellable.Tests
             firstHandlerBlocker.SetResult();
             var cancellationTokenSource = new CancellationTokenSource();
 
+            chain.Handle(404, cancellationTokenSource.Token).AsTask().WaitAsync(cancellationTokenSource.Token);
+
             Assert.That(() => chain.Handle(404, cancellationTokenSource.Token), Throws.Nothing);
             Assert.That(() => chain.Handle(404, cancellationTokenSource.Token), Throws.Nothing);
+        }
+
+        [Test]
+        public void DisposingCanceller_CancelsChainExecution()
+        {
+            var cancellableChain = chain as ICancellableChain;
+
+            var (resultTask, canceller) = cancellableChain.Handle(42);
+            canceller.Dispose();
+
+            firstHandlerBlocker.SetResult();
+
+            Assert.That(() => resultTask, Throws.InstanceOf<OperationCanceledException>());
         }
     }
 }
