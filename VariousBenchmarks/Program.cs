@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
 
 using VariousBenchmarks.Collections.Composite.CompositeEnumerator;
+using VariousBenchmarks.Streams;
 
-BenchmarkRunner.Run<CompositeEnumeratorBenchmarks>();
+BenchmarkRunner.Run<Base64StreamBenchmarks>();

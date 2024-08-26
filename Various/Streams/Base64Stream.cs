@@ -1,62 +1,85 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 
 namespace Various.Streams
 {
-    public class Base64Stream(Stream source) : Stream
+    public sealed class EncodingStream : Stream
     {
-        public override bool CanRead => source.CanRead;
+        private readonly Stream output;
+        private readonly StreamWriter writer;
+
+        public EncodingStream(Stream output)
+        {
+            this.output = output;
+            this.writer = new StreamWriter(output);
+        }
+
+        public override bool CanWrite => true;
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            writer.Write(Convert.ToBase64String(buffer, offset, count));
+        }
+
+        public override void Flush() => writer.Flush();
+
+        protected override void Dispose(bool disposing) => writer.Dispose();
+
+        public override bool CanRead => false;
 
         public override bool CanSeek => false;
-
-        public override bool CanWrite => source.CanWrite;
 
         public override long Length => throw new NotSupportedException();
 
         public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
 
-        public override void Flush()
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+    }
+
+    public sealed class Base64Stream : Stream
+    {
+        private Stream next;
+
+        public static Base64Stream CreateForEncoding(Stream output)
         {
-            throw new NotImplementedException();
+            var encodingStream = new EncodingStream(output);
+            var bufferedStream = new BufferedStream(encodingStream, 3 * 1024);
+
+            return new Base64Stream(bufferedStream);
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        private Base64Stream(Stream next)
         {
-            throw new NotImplementedException();
+            this.next = next;
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
+        public override bool CanRead => throw new NotSupportedException();
+
+        public override bool CanSeek => throw new NotSupportedException();
+
+        public override bool CanWrite => next is BufferedStream;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override void Flush() => next.Flush();
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => next.Write(buffer, offset, count);
+
+        protected override void Dispose(bool disposing)
         {
-            throw new NotSupportedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotSupportedException();
-        }
-
-        private byte[] remainder = new byte[2];
-        private int remainderLen = 0;
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            // also use remainder
-            var amountToWrite = count - (count % 3);
-            using var writer = new StreamWriter(source); // save before
-            writer.Write(Convert.ToBase64String(buffer, offset, amountToWrite));
-
-            remainderLen = count - amountToWrite;
-
-            if (remainderLen > 0)
-            {
-                remainder[0] = buffer[amountToWrite];
-            }
-            if (remainderLen > 1)
-            {
-                remainder[1] = buffer[amountToWrite + 1];
-            }
+            next.Flush();
+            next.Dispose();
         }
     }
 }
