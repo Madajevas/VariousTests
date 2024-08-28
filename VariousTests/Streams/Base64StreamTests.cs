@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿using LanguageExt.UnitsOfMeasure;
+
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+
+using System.Text;
 
 using Various.Streams;
 
@@ -9,7 +13,7 @@ namespace VariousTests.Streams
         [TestCase(1024)]
         [TestCase(2 * 1024)]
         [TestCase(6 * 1024)]
-        public void ConvertingBytesToBase64_AndStreamingEncoding_ShouldProduceSameResult(int length)
+        public void EncodingBytesToBase64_AndStreamingEncoding_ShouldProduceSameResult(int length)
         {
             var bytes = new byte[length];
             Random.Shared.NextBytes(bytes);
@@ -34,6 +38,26 @@ namespace VariousTests.Streams
             Base64Stream.CreateForEncoding(output).Dispose();
 
             output.Received().Dispose();
+        }
+
+        [Test]
+        public void DecodingBytesFromBase64_Todo()
+        {
+            var bytes = new byte[1024];
+            Random.Shared.NextBytes(bytes);
+            var base64 = Convert.ToBase64String(bytes);
+            using var source = new MemoryStream();
+            using (var writer = new StreamWriter(source, leaveOpen: true))
+            {
+                writer.Write(base64);
+            }
+            source.Position = 0;
+
+            var base64Stream = Base64Stream.CreateForDecoding(source);
+            using var target = new MemoryStream();
+            base64Stream.CopyTo(target);
+
+            Assert.That(target.ToArray(), Is.EqualTo(bytes));
         }
     }
 }
