@@ -6,18 +6,14 @@ namespace Various.Streams
     {
         private readonly StreamReader reader;
         private readonly Queue<byte> buffered;
-        private readonly Stream source;
 
         public DecodingStream(Stream source)
         {
             this.reader = new StreamReader(source);
             this.buffered = new Queue<byte>();
-            this.source = source;
         }
 
         public override bool CanRead => true;
-
-        // private const int BufferSize = 
 
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -25,9 +21,9 @@ namespace Various.Streams
             while (buffered.Count < count)
             {
                 var read = reader.Read(internalBuffer, 0, internalBuffer.Length);
-                foreach(var b in Convert.FromBase64CharArray(internalBuffer, 0, read))
+                foreach(var decodedByte in Convert.FromBase64CharArray(internalBuffer, 0, read))
                 {
-                    buffered.Enqueue(b);
+                    buffered.Enqueue(decodedByte);
                 }
 
                 if (read < internalBuffer.Length)

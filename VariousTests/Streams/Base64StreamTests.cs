@@ -40,10 +40,12 @@ namespace VariousTests.Streams
             output.Received().Dispose();
         }
 
-        [Test]
-        public void DecodingBytesFromBase64_Todo()
+        [TestCase(1024)]
+        [TestCase(2 * 1024)]
+        [TestCase(6 * 1024)]
+        public void DecodingBytesFromBase64_ProducesCorrectResult(int length)
         {
-            var bytes = new byte[1024];
+            var bytes = new byte[length];
             Random.Shared.NextBytes(bytes);
             var base64 = Convert.ToBase64String(bytes);
             using var source = new MemoryStream();
