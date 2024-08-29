@@ -1,12 +1,10 @@
-﻿using System.Text;
-
-using Various.Streams;
+﻿using Various.Streams;
 
 namespace VariousBenchmarks.Streams
 {
     [MemoryDiagnoser]
     [SimpleJob(iterationCount: 10)]
-    public class Base64StreamBenchmarks
+    public class Base64StreamDecodingBenchmarks
     {
         private Stream source;
 
@@ -19,24 +17,26 @@ namespace VariousBenchmarks.Streams
             source = new MemoryStream();
             var bytes = new byte[Size];
             Random.Shared.NextBytes(bytes);
-            source.Write(bytes);
+
+            using (var writer = new StreamWriter(source, leaveOpen: true))
+            {
+                writer.Write(Convert.ToBase64String(bytes));
+            }
         }
 
         [GlobalCleanup]
         public void Cleanup() => source.Dispose();
 
         [Benchmark(Baseline = true)]
-        public void RegularConvertToBase64()
+        public void RegularConvertFromBase64()
         {
             source.Position = 0;
 
-            using var ms = new MemoryStream();
-            source.CopyTo(ms);
-
-            var base64 = Convert.ToBase64String(ms.ToArray());
-
-            using var writer = new StreamWriter(Stream.Null);
-            writer.Write(Encoding.UTF8.GetBytes(base64));
+            using (var reader = new StreamReader(source, leaveOpen: true))
+            {
+                var decoded = Convert.FromBase64String(reader.ReadToEnd());
+                Stream.Null.Write(decoded);
+            }
         }
 
         [Benchmark]
@@ -44,8 +44,8 @@ namespace VariousBenchmarks.Streams
         {
             source.Position = 0;
 
-            using var base64Stream = Base64Stream.CreateForEncoding(Stream.Null);
-            source.CopyTo(base64Stream);
+            using var base64Stream = Base64Stream.CreateForDecoding(source);
+            base64Stream.CopyTo(Stream.Null);
         }
     }
 }

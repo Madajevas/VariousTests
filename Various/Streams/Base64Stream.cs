@@ -159,11 +159,9 @@ namespace Various.Streams
 
         public override void SetLength(long value) => throw new NotSupportedException();
 
-        
-
         protected override void Dispose(bool disposing)
         {
-            next.Flush();
+            (next as EncodingStream)?.Flush();
             next.Dispose();
         }
     }
