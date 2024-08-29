@@ -43,6 +43,8 @@ namespace Various.Streams
             return i;
         }
 
+        protected override void Dispose(bool disposing) => reader.Dispose();
+
         public override bool CanWrite => false;
 
         public override bool CanSeek => false;
