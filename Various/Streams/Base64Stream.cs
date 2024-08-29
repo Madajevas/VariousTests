@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using System.Text;
+﻿using System.Buffers;
 
 namespace Various.Streams
 {
@@ -18,35 +17,25 @@ namespace Various.Streams
 
         public override bool CanRead => true;
 
+        // private const int BufferSize = 
+
         public override int Read(byte[] buffer, int offset, int count)
         {
-
-            var buff = new char[40];
+            var internalBuffer = ArrayPool<char>.Shared.Rent(4 * 512);
             while (buffered.Count < count)
             {
-                var read = reader.Read(buff, 0, buff.Length);
-                foreach(var b in Convert.FromBase64CharArray(buff, 0, read))
+                var read = reader.Read(internalBuffer, 0, internalBuffer.Length);
+                foreach(var b in Convert.FromBase64CharArray(internalBuffer, 0, read))
                 {
                     buffered.Enqueue(b);
                 }
 
-                // var read = source.Read(buff, 0, buff.Length);
-                // var a = Encoding.UTF8.GetString(buff, 0, read);
-                // foreach (var b in Convert.FromBase64CharArray(a, 0, a.Length))
-                // {
-                //     buffered.Enqueue(b);
-                // }
-                //for (var j = 0; j < read; j++)
-                //{
-                //    buffered.Enqueue(buff[j]);
-                //}
-
-                if (read < buff.Length)
+                if (read < internalBuffer.Length)
                 {
                     break;
                 }
             }
-
+            ArrayPool<char>.Shared.Return(internalBuffer);
 
             int i = 0;
             while (buffered.Count > 0 && i < count)
@@ -56,13 +45,6 @@ namespace Various.Streams
             }
 
             return i;
-
-
-            //var chars = new char[3 * 1024];
-            //var read = reader.ReadBlock(chars);
-            //var decoded = Convert.FromBase64CharArray(chars, 0, read);
-
-            //decoded.CopyTo(buffer, offset);
         }
 
         public override bool CanWrite => false;
