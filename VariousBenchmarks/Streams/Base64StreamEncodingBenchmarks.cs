@@ -36,7 +36,7 @@ namespace VariousBenchmarks.Streams
             var base64 = Convert.ToBase64String(ms.ToArray());
 
             using var writer = new StreamWriter(Stream.Null);
-            writer.Write(Encoding.UTF8.GetBytes(base64));
+            writer.Write(base64);
         }
 
         [Benchmark]

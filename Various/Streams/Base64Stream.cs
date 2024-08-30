@@ -9,7 +9,7 @@ namespace Various.Streams
         public static Base64Stream CreateForEncoding(Stream output)
         {
             var encodingStream = new EncodingStream(output);
-            var bufferedStream = new BufferedStream(encodingStream, 3 * 1024);
+            var bufferedStream = new BufferedStream(encodingStream, bufferSize: 3 * 1024);
 
             return new Base64Stream(bufferedStream);
         }

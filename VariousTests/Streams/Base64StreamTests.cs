@@ -7,7 +7,7 @@ namespace VariousTests.Streams
     internal class Base64StreamTests
     {
         [TestCase(1024)]
-        [TestCase(2 * 1024)]
+        [TestCase(3 * 1024)]
         [TestCase(6 * 1024)]
         public void EncodingBytesToBase64_AndStreamingEncoding_ShouldProduceSameResult(int length)
         {
@@ -37,7 +37,7 @@ namespace VariousTests.Streams
         }
 
         [TestCase(1024)]
-        [TestCase(2 * 1024)]
+        [TestCase(3 * 1024)]
         [TestCase(6 * 1024)]
         public void DecodingBytesFromBase64_ProducesCorrectResult(int length)
         {
