@@ -157,7 +157,7 @@ namespace VariousTests.Caching
             {
                 if (memoryCache.TryGetValue<byte[]>(key, out var result))
                 {
-                    return Task.FromResult(result);
+                    return Task.FromResult(result!);
                 }
 
                 var task = concurrentDictionary.GetOrAdd(key, k =>

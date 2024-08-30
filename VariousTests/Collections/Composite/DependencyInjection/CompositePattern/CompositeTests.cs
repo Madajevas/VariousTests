@@ -29,7 +29,7 @@ namespace VariousTests.Collections.Composite.DependencyInjection.CompositePatter
 
             var provider = services.BuildServiceProvider();
 
-            composite = provider.GetService<IComposite>() as Composite;
+            this.composite = provider.GetService<IComposite>() as Composite;
         }
 
         [Test]
@@ -41,13 +41,13 @@ namespace VariousTests.Collections.Composite.DependencyInjection.CompositePatter
         [Test]
         public void ExtraCompositeDependency_IsInjectedSuccessfully()
         {
-            Assert.That(composite.DependencyTwo, Is.Not.Null);
+            Assert.That(composite!.DependencyTwo, Is.Not.Null);
         }
 
         [Test]
         public void Components_AreInjectedCorrectly()
         {
-            var components = composite.Components.ToArray();
+            var components = composite!.Components.ToArray();
 
             Assert.That(components[0], Is.InstanceOf<ImplementationOne>());
             Assert.That(components[1], Is.InstanceOf<ImplementationTwo>());
@@ -56,9 +56,9 @@ namespace VariousTests.Collections.Composite.DependencyInjection.CompositePatter
         [Test]
         public void InjectedComponents_MayHaveDependenciesOfTheirOwn()
         {
-            var implementationOne = composite.Components.First() as ImplementationOne;
+            var implementationOne = composite!.Components.First() as ImplementationOne;
 
-            Assert.That(implementationOne.DependencyOne, Is.Not.Null);
+            Assert.That(implementationOne!.DependencyOne, Is.Not.Null);
         }
 
         [Test]

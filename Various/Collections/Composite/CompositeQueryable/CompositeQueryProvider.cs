@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace Various.Collections.Composite.CompositeQueryable;
 
@@ -52,7 +47,7 @@ internal class CompositeQueryProvider<T> : IQueryProvider
             var argsDebug = GetArguments(query).ToList();
             var body = Expression.Call(null, methodCallExpression.Method, argsDebug);
 
-            var newQueryable = (IQueryable<TElement>)query.Provider.Execute(body);
+            var newQueryable = (IQueryable<TElement>)query.Provider.Execute(body)!;
 
             yield return newQueryable;
         }

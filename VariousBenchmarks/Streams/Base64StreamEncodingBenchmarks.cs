@@ -8,12 +8,12 @@ namespace VariousBenchmarks.Streams
     [SimpleJob(iterationCount: 10)]
     public class Base64StreamEncodingBenchmarks
     {
-        private Stream source;
+        private Stream source = null!;
 
         [Params(1024, 64 * 1024, 1024 * 1024)]
         public int Size { get; set; }
 
-        [GlobalSetup]
+        [IterationSetup]
         public void Setup()
         {
             source = new MemoryStream();
@@ -22,7 +22,7 @@ namespace VariousBenchmarks.Streams
             source.Write(bytes);
         }
 
-        [GlobalCleanup]
+        [IterationCleanup]
         public void Cleanup() => source.Dispose();
 
         [Benchmark(Baseline = true)]

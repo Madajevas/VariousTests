@@ -13,7 +13,7 @@
 
         public virtual async ValueTask<TOutput> Execute(TInput input, CancellationToken cancellationToken)
         {
-            dynamic nextInput = input;
+            dynamic nextInput = input!;
             foreach(var stepType in stepTypes)
             {
                 cancellationToken.ThrowIfCancellationRequested();

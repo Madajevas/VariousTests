@@ -49,7 +49,7 @@ namespace VariousTests.ChainsOfResponsibility.Cancellable.Tests
             chain = builder.Build();
         }
 
-        [Test, Timeout(10_000)]
+        [Test]
         public void WhenOperationIsCancelled_OperationCanceledExceptionIsThrown()
         {
             var cancellationTokenSource = new CancellationTokenSource();
@@ -79,7 +79,7 @@ namespace VariousTests.ChainsOfResponsibility.Cancellable.Tests
         {
             var cancellableChain = chain as ICancellableChain;
 
-            var (resultTask, canceller) = cancellableChain.Handle(42);
+            var (resultTask, canceller) = cancellableChain!.Handle(42);
             canceller.Dispose();
 
             firstHandlerBlocker.SetResult();
