@@ -7,9 +7,9 @@ namespace Various.Streams
         private readonly StreamReader reader;
         private readonly Queue<byte> buffered;
 
-        public DecodingStream(Stream source)
+        public DecodingStream(Stream source, bool leaveOpen)
         {
-            this.reader = new StreamReader(source);
+            this.reader = new StreamReader(source, leaveOpen: leaveOpen);
             this.buffered = new Queue<byte>();
         }
 
@@ -109,9 +109,9 @@ namespace Various.Streams
             return new Base64Stream(bufferedStream);
         }
 
-        public static Base64Stream CreateForDecoding(Stream input)
+        public static Base64Stream CreateForDecoding(Stream input, bool leaveOpen = false)
         {
-            var decodingStream = new DecodingStream(input);
+            var decodingStream = new DecodingStream(input, leaveOpen);
             return new Base64Stream(decodingStream);
         }
 

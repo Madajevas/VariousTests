@@ -13,7 +13,7 @@ namespace VariousBenchmarks.Streams
         [Params(1024, 64 * 1024, 1024 * 1024)]
         public int Size { get; set; }
 
-        [IterationSetup]
+        [GlobalSetup]
         public void Setup()
         {
             source = new MemoryStream();
@@ -22,7 +22,7 @@ namespace VariousBenchmarks.Streams
             source.Write(bytes);
         }
 
-        [IterationCleanup]
+        [GlobalCleanup]
         public void Cleanup() => source.Dispose();
 
         [Benchmark(Baseline = true)]

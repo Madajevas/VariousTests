@@ -11,7 +11,7 @@ namespace VariousBenchmarks.Streams
         [Params(1024, 64 * 1024, 1024 * 1024)]
         public int Size { get; set; }
 
-        [IterationSetup]
+        [GlobalSetup]
         public void Setup()
         {
             source = new MemoryStream();
@@ -24,7 +24,7 @@ namespace VariousBenchmarks.Streams
             }
         }
 
-        [IterationCleanup]
+        [GlobalCleanup]
         public void Cleanup() => source.Dispose();
 
         [Benchmark(Baseline = true)]
@@ -44,7 +44,7 @@ namespace VariousBenchmarks.Streams
         {
             source.Position = 0;
 
-            using var base64Stream = Base64Stream.CreateForDecoding(source);
+            using var base64Stream = Base64Stream.CreateForDecoding(source, leaveOpen: true);
             base64Stream.CopyTo(Stream.Null);
         }
     }
