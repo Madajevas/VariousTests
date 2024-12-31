@@ -8,7 +8,7 @@ namespace VariousTests.Streams
     {
         [TestCase(1024)]
         [TestCase(3 * 1024)]
-        [TestCase(6 * 1024)]
+        [TestCase(64 * 1024 * 1024 + 1)]
         public void EncodingBytesToBase64_AndStreamingEncoding_ShouldProduceSameResult(int length)
         {
             var bytes = new byte[length];
@@ -19,6 +19,30 @@ namespace VariousTests.Streams
             using var output = new MemoryStream();
             var base64Stream = Base64Stream.CreateForEncoding(output);
             base64Stream.Write(bytes);
+            base64Stream.Flush();
+            var streamResult = Encoding.ASCII.GetString(output.ToArray());
+
+            Assert.That(regularResult, Is.EqualTo(streamResult));
+        }
+
+        [Test]
+        public void Encoding_UsingWriteMethodWithOffsetAndLength_ProducesCorrectResult()
+        {
+            var bytes = new byte[64 * 1024 * 1024 + 1];
+            Random.Shared.NextBytes(bytes);
+
+            var regularResult = Convert.ToBase64String(bytes);
+
+            using var output = new MemoryStream();
+            var base64Stream = Base64Stream.CreateForEncoding(output);
+            var offset = 0;
+            while (offset < bytes.Length)
+            {
+                var bytesCount = Math.Min(1024, bytes.Length - offset);
+                var buff = bytes[offset..(offset + bytesCount)];
+                base64Stream.Write(buff, 0, bytesCount);
+                offset += 1024;
+            }
             base64Stream.Flush();
             var streamResult = Encoding.ASCII.GetString(output.ToArray());
 
