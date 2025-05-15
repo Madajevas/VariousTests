@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-using Various.Parsing;
+﻿using Various.Parsing;
 
 namespace VariousTests.Parsing
 {
@@ -9,9 +7,9 @@ namespace VariousTests.Parsing
         private const string FormData = "Name=John&age=30&city=New%20York";
 
         [Test]
-        public void Parse_ParsesPersonCorrectly()
+        public void Parse_WhenUsingStringToStringDictionaryBackplaneStrategy_ParsesPersonCorrectly()
         {
-            var person = FormDataParser.Parse<IPerson>(FormData);
+            var person = FormDataParser.Parse<IPerson, StringToStringDictionaryBackplaneStrategy>(FormData);
 
             Assert.That(person.Name, Is.EqualTo("John"));
             Assert.That(person.Age, Is.EqualTo(30));
@@ -19,10 +17,23 @@ namespace VariousTests.Parsing
         }
 
         [Test]
-        public void Parse_ParsesPersonWithAdditionalFields()
+        public void Parse_WhenUsingMemoryOfCharToStringDictionaryBackplaneStrategy_ParsesPersonCorrectly()
         {
-            var json = """{"name":"John","age":"30","city":"New York","address":"Some Street and Some Apartment","FavoriteNumber":"404"}""";
-            var person = JsonSerializer.Deserialize<Person>(json, JsonSerializerOptions.Web);
+            var person = FormDataParser.Parse<IPerson, MemoryOfCharToStringDictionaryBackplaneStrategy>(FormData);
+
+            Assert.That(person.Name, Is.EqualTo("John"));
+            Assert.That(person.Age, Is.EqualTo(30));
+            Assert.That(person.City, Is.EqualTo("New York"));
+        }
+
+        [Test]
+        public void Parse_WhenUsingMemoryOfCharToMemoryOfCharDictionaryBackplaneStrategy_ParsesPersonCorrectly()
+        {
+            var person = FormDataParser.Parse<IPerson, MemoryOfCharToMemoryOfCharDictionaryBackplaneStrategy>(FormData);
+
+            Assert.That(person.Name, Is.EqualTo("John"));
+            Assert.That(person.Age, Is.EqualTo(30));
+            Assert.That(person.City, Is.EqualTo("New York"));
         }
     }
 
@@ -31,14 +42,5 @@ namespace VariousTests.Parsing
         string Name { get; }
         int Age { get; }
         string City { get; }
-    }
-
-    class Person
-    {
-        public string Name { get; set; } = null!;
-        public int Age { get; set; }
-        public string City { get; set; } = null!;
-        public string Address { get; set; } = null!;
-        public int? FavoriteNumber { get; set; }
     }
 }
