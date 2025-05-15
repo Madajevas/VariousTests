@@ -1,4 +1,5 @@
-﻿using MockQueryable.NSubstitute;
+﻿using MockQueryable;
+using MockQueryable.NSubstitute;
 
 using Various.Collections.Composite.CompositeQueryable;
 
