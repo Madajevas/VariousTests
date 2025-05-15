@@ -93,63 +93,30 @@ namespace Various.Parsing
 
     public class FormDataParser : DispatchProxy
     {
-        // 1:
-        private IReadOnlyDictionary<string, string> formData = null!;
-        // 2: private IReadOnlyDictionary<ReadOnlyMemory<char>, string> formData = null!;
-        // 3: private IReadOnlyDictionary<ReadOnlyMemory<char>, ReadOnlyMemory<char>> formData = null!;
+        private IBackplaneStrategy strategy = null!;
 
-        public static T Parse<T>(string formData)
+        public static T Parse<T, TStrategy>(string formData) where TStrategy : IBackplaneStrategy
         {
             Debug.Assert(typeof(T).IsInterface, "T must be an interface type");
 
-            using var b = new FormReader(formData);
-
-            // 3:
-            //var d = new Dictionary<ReadOnlyMemory<char>, ReadOnlyMemory<char>>(new MemStringEqualityComparer());
-            //foreach (var a in formData.AsSpan().Split('&'))
-            //{
-            //    var m = formData.AsMemory()[a];
-            //    var c = m.Span.Split('=');
-            //    c.MoveNext();
-            //    var key = m[c.Current];
-            //    c.MoveNext();
-            //    var value = m[c.Current];
-            //    d.Add(key, value);
-            //}
-
-
             var parser = Create<T, FormDataParser>();
-            // 1:
-            (parser as FormDataParser)!.formData = b.ReadForm().ToDictionary(k => k.Key, v => v.Value.ToString(), StringComparer.OrdinalIgnoreCase);
-            // 2: (parser as FormDataParser)!.formData = b.ReadForm().ToDictionary(k => k.Key.AsMemory(), v => v.Value.ToString(), new MemStringEqualityComparer());
-            // 3: (parser as FormDataParser)!.formData = d;
+            (parser as FormDataParser)!.strategy = TStrategy.Create(formData);
+
             return (T)parser;
         }
 
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
-            // 1:
-            var propName = targetMethod.Name.Replace("get_", "");
-            // 2, 3
-            //var propName = targetMethod.Name.IndexOf('_') switch
-            //{
-            //    -1 => targetMethod.Name.AsMemory(),
-            //    int i => targetMethod.Name.AsMemory().Slice(targetMethod.Name.IndexOf('_') + 1)
-            //};
-
-            if (formData.TryGetValue(propName, out var value))
+            if (strategy.TryGetValue(targetMethod.Name, out var value))
             {
-                // 1, 2:
-                return Convert.ChangeType(value, targetMethod.ReturnType, CultureInfo.InvariantCulture);
-                // 3:
-                //if (targetMethod.ReturnType == typeof(string))
-                //{
-                //    return HttpUtility.UrlDecode(new string(value.Span));
-                //}
-                //if (targetMethod.ReturnType == typeof(int))
-                //{
-                //    return int.Parse(value.Span, CultureInfo.InvariantCulture);
-                //}
+                if (targetMethod.ReturnType == typeof(string))
+                {
+                    return HttpUtility.UrlDecode(new string(value));
+                }
+                if (targetMethod.ReturnType == typeof(int))
+                {
+                    return int.Parse(value, CultureInfo.InvariantCulture);
+                }
             }
 
             return null;

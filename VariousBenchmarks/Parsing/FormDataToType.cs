@@ -14,7 +14,8 @@ namespace VariousBenchmarks.Parsing
     {
         [Params(
             "name=John&age=30&city=New%20York",
-            "name=John&age=30&city=New%20York&address=Some%20Street%20and%20Some%20Apartment&FavoriteNumber=404"
+            "name=John&age=30&city=New%20York&address=Some%20Street%20and%20Some%20Apartment&FavoriteNumber=404",
+            "name=John&age=30&city=New%20York&address=Some%20Street%20and%20Some%20Apartment&FavoriteNumber=404&PI=3.14&IgnoreThis=Altogether"
         )]
         public string FormData;
 
@@ -29,15 +30,51 @@ namespace VariousBenchmarks.Parsing
         }
 
         [Benchmark]
-        public IPerson ParseUsingFormDataParser()
+        public IPerson HideBehindDispatchProxy_WithStringToStringDictionaryTarget()
         {
-            return FormDataParser.Parse<IPerson>(FormData);
+            return FormDataParser.Parse<IPerson, StringToStringDictionaryBackplaneStrategy>(FormData);
         }
 
         [Benchmark]
-        public IPerson ParseUsingFormDataParserAndAccessMembers()
+        public IPerson HideBehindDispatchProxy_WithStringToStringDictionaryTarget_AccessFields()
         {
-            var person = FormDataParser.Parse<IPerson>(FormData);
+            var person = FormDataParser.Parse<IPerson, StringToStringDictionaryBackplaneStrategy>(FormData);
+
+            consumer.Consume(person.Name);
+            consumer.Consume(person.Age);
+            consumer.Consume(person.City);
+
+            return person;
+        }
+
+        [Benchmark]
+        public IPerson HideBehindDispatchProxy_WithMemoryOfCharsToStringDictionaryTarget()
+        {
+            return FormDataParser.Parse<IPerson, MemoryOfCharToStringDictionaryBackplaneStrategy>(FormData);
+        }
+
+        [Benchmark]
+        public IPerson HideBehindDispatchProxy_WithMemoryOfCharsToStringDictionaryTarget_AccessFields()
+        {
+            var person = FormDataParser.Parse<IPerson, MemoryOfCharToStringDictionaryBackplaneStrategy>(FormData);
+
+            consumer.Consume(person.Name);
+            consumer.Consume(person.Age);
+            consumer.Consume(person.City);
+
+            return person;
+        }
+
+        [Benchmark]
+        public IPerson HideBehindDispatchProxy_WithMemoryOfCharsToMemoryOfCharsDictionaryTarget()
+        {
+            return FormDataParser.Parse<IPerson, MemoryOfCharToMemoryOfCharDictionaryBackplaneStrategy>(FormData);
+        }
+
+        [Benchmark]
+        public IPerson HideBehindDispatchProxy_WithMemoryOfCharsToMemoryOfCharsDictionaryTarget_AccessFields()
+        {
+            var person = FormDataParser.Parse<IPerson, MemoryOfCharToMemoryOfCharDictionaryBackplaneStrategy>(FormData);
 
             consumer.Consume(person.Name);
             consumer.Consume(person.Age);
