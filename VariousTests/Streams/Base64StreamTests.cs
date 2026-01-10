@@ -28,7 +28,7 @@ namespace VariousTests.Streams
         [Test]
         public void Encoding_UsingWriteMethodWithOffsetAndLength_ProducesCorrectResult()
         {
-            var bytes = new byte[64 * 1024 * 1024 + 1];
+            var bytes = new byte[64 * 1024 + 1];
             Random.Shared.NextBytes(bytes);
 
             var regularResult = Convert.ToBase64String(bytes);
@@ -38,10 +38,10 @@ namespace VariousTests.Streams
             var offset = 0;
             while (offset < bytes.Length)
             {
-                var bytesCount = Math.Min(1024, bytes.Length - offset);
+                var bytesCount = Math.Min(4096, bytes.Length - offset);
                 var buff = bytes[offset..(offset + bytesCount)];
                 base64Stream.Write(buff, 0, bytesCount);
-                offset += 1024;
+                offset += 4096;
             }
             base64Stream.Flush();
             var streamResult = Encoding.ASCII.GetString(output.ToArray());

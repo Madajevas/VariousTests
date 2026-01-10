@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace Various.Streams
+﻿namespace Various.Streams
 {
     public sealed partial class Base64Stream : NothingSupportedStream
     {
@@ -9,9 +7,8 @@ namespace Various.Streams
         public static Base64Stream CreateForEncoding(Stream output)
         {
             var encodingStream = new EncodingStream(output);
-            var bufferedStream = new BufferedStream(encodingStream, bufferSize: 3 * 1024);
 
-            return new Base64Stream(bufferedStream);
+            return new Base64Stream(encodingStream);
         }
 
         public static Base64Stream CreateForDecoding(Stream input, bool leaveOpen = false)
