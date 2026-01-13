@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Buffers.Text;
 
 namespace Various.Streams
 {
@@ -8,55 +7,44 @@ namespace Various.Streams
         sealed class EncodingStream : NothingSupportedStream
         {
             private readonly StreamWriter writer;
-            private ArrayBufferWriter<byte> buffered;
+
+            private byte[] remainder = new byte[2];
+            private int remainderCount;
 
             public EncodingStream(Stream output)
             {
                 this.writer = new StreamWriter(output);
-                this.buffered = new ArrayBufferWriter<byte>();
             }
 
             public override bool CanWrite => true;
 
             public override void Write(byte[] buffer, int offset, int count)
             {
-                buffered.Write(buffer.AsSpan(offset, count));
-                var maxLength = (buffered.WrittenCount / 3) * 3;
+                var bytesToTake = ((remainderCount + count) / 3) * 3;
+                if (bytesToTake > 0)
+                {
+                    var chunk = ArrayPool<byte>.Shared.Rent(bytesToTake);
 
-                if (maxLength == 0)
-                {
-                    return;
-                }
+                    remainder.AsSpan(0, remainderCount).CopyTo(chunk);
+                    buffer.AsSpan(offset, bytesToTake - remainderCount).CopyTo(chunk.AsSpan(remainderCount));
+                    writer.Write(Convert.ToBase64String(chunk, 0, bytesToTake));
 
-                var chunk = ArrayPool<byte>.Shared.Rent(maxLength);
-                try
-                {
-                    buffered.WrittenSpan.Slice(0, maxLength).CopyTo(chunk);
-                    writer.Write(Convert.ToBase64String(chunk, 0, maxLength));
-                }
-                finally
-                {
                     ArrayPool<byte>.Shared.Return(chunk);
-                }
 
-                var unreadBytes = buffered.WrittenCount - maxLength;
-                if (unreadBytes > 0)
-                {
-                    Span<byte> remainder = stackalloc byte[unreadBytes];
-                    buffered.WrittenSpan.Slice(maxLength, unreadBytes).CopyTo(remainder);
-                    buffered.Clear();
-                    buffered.Write(remainder);
-                    Console.WriteLine();
+                    remainderCount = count - bytesToTake + remainderCount;
+                    buffer.AsSpan(offset + count - remainderCount, remainderCount).CopyTo(remainder);
                 }
                 else
                 {
-                    buffered.Clear();
+                    // this branch will execute only when bytesToTake <= 2 so remainder array will never overflow
+                    buffer.AsSpan(offset, count).CopyTo(remainder.AsSpan(remainderCount));
+                    remainderCount += count;
                 }
             }
 
             public override void Flush()
             {
-                writer.Write(Convert.ToBase64String(buffered.WrittenSpan));
+                writer.Write(Convert.ToBase64String(remainder.AsSpan(0, remainderCount)));
                 writer.Flush();
             }
 
