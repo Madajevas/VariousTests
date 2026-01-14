@@ -3,4 +3,4 @@
 using VariousBenchmarks.Parsing;
 using VariousBenchmarks.Streams;
 
-BenchmarkRunner.Run<Base64StreamEncodingBenchmarks>();
+BenchmarkRunner.Run<Base64StreamDecodingBenchmarks>();
