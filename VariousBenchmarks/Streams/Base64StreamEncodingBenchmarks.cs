@@ -33,7 +33,7 @@ namespace VariousBenchmarks.Streams
             using var ms = new MemoryStream();
             source.CopyTo(ms);
 
-            var base64 = Convert.ToBase64String(ms.ToArray());
+            var base64 = Convert.ToBase64String(ms.GetBuffer());
 
             using var writer = new StreamWriter(Stream.Null);
             writer.Write(base64);
