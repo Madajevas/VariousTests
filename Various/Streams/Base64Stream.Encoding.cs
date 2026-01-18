@@ -1,5 +1,8 @@
-﻿using System.Buffers;
+﻿using Microsoft.Identity.Client;
+
+using System.Buffers;
 using System.Buffers.Text;
+using System.Diagnostics;
 
 namespace Various.Streams
 {
@@ -30,6 +33,7 @@ namespace Various.Streams
                         out var _,
                         out var bytesWritten,
                         isFinalBlock: false);
+                    Debug.Assert(status == OperationStatus.Done);
                     output.Write(encoded, 0, bytesWritten);
 
                     ArrayPool<byte>.Shared.Return(encoded);
@@ -56,6 +60,8 @@ namespace Various.Streams
                     out var bytesWritten,
                     isFinalBlock: true);
                 output.Write(encoded.Slice(0, bytesWritten));
+
+                output.Flush();
             }
 
             protected override void Dispose(bool disposing) => output.Dispose();

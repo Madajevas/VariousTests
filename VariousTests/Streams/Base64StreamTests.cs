@@ -77,7 +77,7 @@ namespace VariousTests.Streams
 
             using var base64Stream = Base64Stream.CreateForDecoding(source);
             using var target = new MemoryStream();
-            base64Stream.CopyTo(target);
+            base64Stream.CopyTo(target, 1024);
 
             Assert.That(target.ToArray(), Is.EqualTo(bytes));
         }

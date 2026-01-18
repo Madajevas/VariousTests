@@ -40,12 +40,30 @@ namespace VariousBenchmarks.Streams
         }
 
         [Benchmark]
-        public void UsingBase64Stream()
+        public void UsingBase64Stream_1024()
         {
             source.Position = 0;
 
             using var base64Stream = Base64Stream.CreateForDecoding(source, leaveOpen: true);
-            base64Stream.CopyTo(Stream.Null);
+            base64Stream.CopyTo(Stream.Null, 1024);
+        }
+
+        [Benchmark]
+        public void UsingBase64Stream_4096()
+        {
+            source.Position = 0;
+
+            using var base64Stream = Base64Stream.CreateForDecoding(source, leaveOpen: true);
+            base64Stream.CopyTo(Stream.Null, 4096);
+        }
+
+        [Benchmark]
+        public void UsingBase64Stream_81920()
+        {
+            source.Position = 0;
+
+            using var base64Stream = Base64Stream.CreateForDecoding(source, leaveOpen: true);
+            base64Stream.CopyTo(Stream.Null, 81920);
         }
     }
 }

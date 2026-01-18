@@ -4,9 +4,9 @@ using VariousBenchmarks.Parsing;
 using VariousBenchmarks.Streams;
 using VariousBenchmarks.Streams.Peak;
 
-// BenchmarkRunner.Run<Base64StreamEncodingBenchmarks>();
+BenchmarkRunner.Run<Base64StreamDecodingBenchmarks>();
 
-// return;
+return;
 double avg;
 avg = PeakMemory.Run(10, 1024).Average();
 Console.WriteLine(avg);
