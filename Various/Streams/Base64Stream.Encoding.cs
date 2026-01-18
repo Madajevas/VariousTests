@@ -1,20 +1,14 @@
 ﻿using System.Buffers;
+using System.Buffers.Text;
 
 namespace Various.Streams
 {
     public partial class Base64Stream
     {
-        sealed class EncodingStream : NothingSupportedStream
+        sealed class EncodingStream(Stream output) : NothingSupportedStream
         {
-            private readonly StreamWriter writer;
-
             private byte[] remainder = new byte[2];
             private int remainderCount;
-
-            public EncodingStream(Stream output)
-            {
-                this.writer = new StreamWriter(output);
-            }
 
             public override bool CanWrite => true;
 
@@ -24,11 +18,21 @@ namespace Various.Streams
                 if (bytesToTake > 0)
                 {
                     var chunk = ArrayPool<byte>.Shared.Rent(bytesToTake);
+                    var encodedBytes = (int)(count * 1.5);
+                    var encoded = ArrayPool<byte>.Shared.Rent(encodedBytes);
 
                     remainder.AsSpan(0, remainderCount).CopyTo(chunk);
                     buffer.AsSpan(offset, bytesToTake - remainderCount).CopyTo(chunk.AsSpan(remainderCount));
-                    writer.Write(Convert.ToBase64String(chunk, 0, bytesToTake));
 
+                    var status = Base64.EncodeToUtf8(
+                        bytes: chunk.AsSpan(0, bytesToTake),
+                        utf8: encoded.AsSpan(0, encodedBytes),
+                        out var _,
+                        out var bytesWritten,
+                        isFinalBlock: false);
+                    output.Write(encoded, 0, bytesWritten);
+
+                    ArrayPool<byte>.Shared.Return(encoded);
                     ArrayPool<byte>.Shared.Return(chunk);
 
                     remainderCount = count - bytesToTake + remainderCount;
@@ -44,11 +48,17 @@ namespace Various.Streams
 
             public override void Flush()
             {
-                writer.Write(Convert.ToBase64String(remainder.AsSpan(0, remainderCount)));
-                writer.Flush();
+                Span<byte> encoded = stackalloc byte[4];
+                var status = Base64.EncodeToUtf8(
+                    bytes: remainder.AsSpan(0, remainderCount),
+                    utf8: encoded,
+                    out var _,
+                    out var bytesWritten,
+                    isFinalBlock: true);
+                output.Write(encoded.Slice(0, bytesWritten));
             }
 
-            protected override void Dispose(bool disposing) => writer.Dispose();
+            protected override void Dispose(bool disposing) => output.Dispose();
 
             public override bool CanRead => false;
 

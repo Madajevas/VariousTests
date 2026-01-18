@@ -22,7 +22,7 @@ namespace VariousTests.Streams
             base64Stream.Flush();
             var streamResult = Encoding.ASCII.GetString(output.ToArray());
 
-            Assert.That(regularResult, Is.EqualTo(streamResult));
+            Assert.That(streamResult, Is.EqualTo(regularResult));
         }
 
         [Test]
@@ -46,7 +46,7 @@ namespace VariousTests.Streams
             base64Stream.Flush();
             var streamResult = Encoding.ASCII.GetString(output.ToArray());
 
-            Assert.That(regularResult, Is.EqualTo(streamResult));
+            Assert.That(streamResult, Is.EqualTo(regularResult));
         }
 
         [Test]

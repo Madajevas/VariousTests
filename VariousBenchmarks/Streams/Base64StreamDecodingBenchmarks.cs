@@ -14,7 +14,7 @@ namespace VariousBenchmarks.Streams
         [GlobalSetup]
         public void Setup()
         {
-            source = new MemoryStream();
+            source = new MemoryStreamInDisguise();
             var bytes = new byte[Size];
             Random.Shared.NextBytes(bytes);
 
