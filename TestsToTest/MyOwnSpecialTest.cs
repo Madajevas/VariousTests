@@ -19,6 +19,20 @@
         {
             Assert.That(outputOfTestBefore, Is.EqualTo(42));
         }
+
+        [MyTest]
+        public double Test3(int outputOfTestBefore)
+        {
+            Assert.That(outputOfTestBefore, Is.GreaterThan(0));
+
+            return (double)outputOfTestBefore;
+        }
+
+        [MyTest]
+        public void Test4(int argOne, double argTwo)
+        {
+            Assert.That(argOne, Is.EqualTo(argTwo));
+        }
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
