@@ -1,0 +1,27 @@
+﻿using System;
+using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+
+namespace TestsGenerator.Abstractions
+{
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class MultistepAttribute : Attribute, ITestAction
+    {
+        private bool previousFailed;
+
+        public ActionTargets Targets => ActionTargets.Suite;
+
+        public void AfterTest(ITest test)
+        {
+            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
+            {
+                previousFailed = true;
+            }
+        }
+
+        public void BeforeTest(ITest test)
+        {
+            Assume.That(previousFailed, Is.False, "Previous test failed");
+        }
+    }
+}

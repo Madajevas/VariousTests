@@ -38,14 +38,14 @@ namespace TestsGenerator
             var symbol = context.SemanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
             if (symbol == null) return null;
 
-            var serializableAttr = context.SemanticModel.Compilation
-                .GetTypeByMetadataName("TestsToTest.MultistepAttribute");
+            var multistepAttr = context.SemanticModel.Compilation
+                .GetTypeByMetadataName("TestsGenerator.Abstractions.MultistepAttribute");
 
-            if (serializableAttr == null) return null;
+            if (multistepAttr == null) return null;
 
             // Only pick classes with [Serializable]
             return symbol.GetAttributes().Any(a =>
-                SymbolEqualityComparer.Default.Equals(a.AttributeClass, serializableAttr))
+                SymbolEqualityComparer.Default.Equals(a.AttributeClass, multistepAttr))
                 ? symbol
                 : null;
         }
@@ -57,7 +57,7 @@ namespace TestsGenerator
 
             var tests = classSymbol.GetMembers()
                 .OfType<IMethodSymbol>()
-                .Where(m => m.GetAttributes().Any(a => a.AttributeClass.Name.Equals("MyTestAttribute")))
+                .Where(m => m.GetAttributes().Any(a => a.AttributeClass.Name.Equals("MultistepParticipantAttribute")))
                 .OrderBy(t => t.Parameters.Count())
                 .ToArray();
             var dependencyGraph = new Dictionary<IMethodSymbol, List<IMethodSymbol>>(SymbolEqualityComparer.Default);
@@ -153,7 +153,7 @@ namespace TestsGenerator
             sb.AppendLine("  }"); // class
             sb.AppendLine("}");   // namespace
 
-            context.AddSource($"{className}Extensions.Incremental.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+            context.AddSource($"{className}Multistep.Incremental.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
         }
 
         private static List<IMethodSymbol> TopologicalSort(Dictionary<IMethodSymbol, List<IMethodSymbol>> graph)
