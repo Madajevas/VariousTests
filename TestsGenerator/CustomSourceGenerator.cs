@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Xml.Linq;
 
 namespace TestsGenerator
 {
@@ -22,43 +23,37 @@ namespace TestsGenerator
                 ctx => ctx.AddSource("MultistepParticipantAttribute.g.cs", SourceText.From(MultistepParticipant.Code, Encoding.UTF8)));
 
 
-
-            // Step 1: Find all class declarations with [Serializable]
-            var classDeclarations = context.SyntaxProvider
+            var testClassDeclarations = context.SyntaxProvider
                 .CreateSyntaxProvider(
-                    predicate: static (s, _) => IsCandidate(s), // quick filter
+                    predicate: static (s, _) => HasAttributes(s), // quick filter
                     transform: static (ctx, _) => GetSemanticTarget(ctx)) // get symbol
                 .Where(static m => m is not null)!;
 
-            // Step 2: Generate code for each matched class
-            context.RegisterSourceOutput(classDeclarations, static (spc, classSymbol) =>
+            context.RegisterSourceOutput(testClassDeclarations, static (spc, classSymbol) =>
             {
-                GenerateSerializer(spc, classSymbol!);
+                GenerateShadowTestClass(spc, classSymbol!);
             });
         }
 
-        private static bool IsCandidate(SyntaxNode node) =>
+        private static bool HasAttributes(SyntaxNode node) =>
             node is ClassDeclarationSyntax cds && cds.AttributeLists.Count > 0;
 
         private static INamedTypeSymbol? GetSemanticTarget(GeneratorSyntaxContext context)
         {
-            var classDecl = (ClassDeclarationSyntax)context.Node;
-            var symbol = context.SemanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-            if (symbol == null) return null;
+            if (!(context.Node is ClassDeclarationSyntax testClassDeclaration) || !(context.SemanticModel.GetDeclaredSymbol(testClassDeclaration) is INamedTypeSymbol symbol))
+            {
+                return null;
+            }
 
-            var multistepAttr = context.SemanticModel.Compilation
-                .GetTypeByMetadataName("TestsGenerator.Abstractions.MultistepAttribute");
+            if (context.SemanticModel.Compilation.GetTypeByMetadataName("TestsGenerator.Abstractions.MultistepAttribute") is not INamedTypeSymbol multistepAttribute)
+            {
+                return null;
+            }
 
-            if (multistepAttr == null) return null;
-
-            // Only pick classes with [Serializable]
-            return symbol.GetAttributes().Any(a =>
-                SymbolEqualityComparer.Default.Equals(a.AttributeClass, multistepAttr))
-                ? symbol
-                : null;
+            return symbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, multistepAttribute)) ? symbol : null;
         }
 
-        private static void GenerateSerializer(SourceProductionContext context, INamedTypeSymbol classSymbol)
+        private static void GenerateShadowTestClass(SourceProductionContext context, INamedTypeSymbol classSymbol)
         {
             // context.ReportDiagnostic()
 
@@ -99,7 +94,6 @@ namespace TestsGenerator
             sb.AppendLine($"  public partial class {className}");
             sb.AppendLine("  {");
 
-            // sb.AppendLine("    private Dictionary<string, object> dependencies = new Dictionary<string, object>();");
             sb.AppendLine();
 
             for (var i = 0; i < sortedTests.Count; i++)
@@ -171,8 +165,8 @@ namespace TestsGenerator
         private static List<IMethodSymbol> TopologicalSort(Dictionary<IMethodSymbol, List<IMethodSymbol>> graph)
         {
             var sorted = new List<IMethodSymbol>();
-            var visited = new HashSet<IMethodSymbol>();
-            var visiting = new HashSet<IMethodSymbol>();
+            var visited = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
+            var visiting = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
 
             void Visit(IMethodSymbol node)
             {
