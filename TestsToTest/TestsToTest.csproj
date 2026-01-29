@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <!--<Analyzer Include="..\TestsGenerator\bin\Debug\netstandard2.0\TestsGenerator.dll"/>-->
-    <ProjectReference Include="..\TestsGenerator.Abstractions\TestsGenerator.Abstractions.csproj" />
     <ProjectReference Include="..\TestsGenerator\TestsGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
