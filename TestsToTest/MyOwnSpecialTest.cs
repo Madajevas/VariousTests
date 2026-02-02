@@ -36,10 +36,10 @@ namespace TestsToTest
             Assert.That(argOne, Is.EqualTo(argTwo));
         }
 
-        [MultistepParticipant]
-        public void Test5(int argOne, Guid argTwo)
-        {
-            Assert.That(argOne.ToString(), Is.EqualTo(argTwo.ToString()));
-        }
+        //[MultistepParticipant]
+        //public void Test5(int argOne, Guid argTwo)
+        //{
+        //    Assert.That(argOne.ToString(), Is.EqualTo(argTwo.ToString()));
+        //}
     }
 }

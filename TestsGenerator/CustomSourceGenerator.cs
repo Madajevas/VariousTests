@@ -76,10 +76,18 @@ namespace TestsGenerator
                     }
                 }
             }
-            var sortedTests = TopologicalSort(dependencyGraph);
 
-            // TODO: move validation here
-            bool hasError = false;
+            var validationResults = Validate(dependencyGraph).ToArray();
+            foreach (var diagnostic in validationResults)
+            {
+                context.ReportDiagnostic(diagnostic);
+            }
+            if (validationResults.Any())
+            {
+                return;
+            }
+
+            var sortedTests = TopologicalSort(dependencyGraph);
 
             using var writer = new IndentedTextWriter(new StringWriter(), "    ");
 
@@ -98,11 +106,6 @@ namespace TestsGenerator
 
             for (var i = 0; i < sortedTests.Count; i++)
             {
-                if (hasError)
-                {
-                    break;
-                }
-
                 var test = tests[i];
 
                 if (test.ReturnsVoid)
@@ -117,19 +120,7 @@ namespace TestsGenerator
                     for (var j = 0; j < test.Parameters.Count(); j++)
                     {
                         var param = test.Parameters[j];
-
-                        if (!requires.TryGetValue(param.Type, out var requiredTest))
-                        {
-                            var descriptor = new DiagnosticDescriptor("TM001", "Missing dependant test", "Missing test generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
-                            Diagnostic diagnostic = Diagnostic.Create(descriptor, param.Locations[0]);
-                            context.ReportDiagnostic(diagnostic);
-
-                            hasError = true;
-
-                            break;
-                        }
-
-                        // var requiredTest = requires[param.Type];
+                        var requiredTest = requires[param.Type];
                         requires.Remove(param.Type);
                         writer.Write($"returnedFrom{requiredTest.Name}");
                         if (j < test.Parameters.Count() - 1)
@@ -177,9 +168,25 @@ namespace TestsGenerator
             writer.Indent--;
             writer.WriteLine("}"); // namespace
 
-            if (!hasError)
+            context.AddSource($"{className}Multistep.Incremental.g.cs", SourceText.From(writer.InnerWriter.ToString(), Encoding.UTF8));
+        }
+
+        private static IEnumerable<Diagnostic> Validate(IReadOnlyDictionary<IMethodSymbol, List<IMethodSymbol>> dependencyGraph)
+        {
+            foreach (var testToDependencies in dependencyGraph)
             {
-                context.AddSource($"{className}Multistep.Incremental.g.cs", SourceText.From(writer.InnerWriter.ToString(), Encoding.UTF8));
+                var test = testToDependencies.Key;
+                var dependencies = new HashSet<ITypeSymbol>(testToDependencies.Value.Select(d => d.ReturnType), SymbolEqualityComparer.Default);
+
+                foreach (var parameter in test.Parameters)
+                {
+                    if (!dependencies.Contains(parameter.Type))
+                    {
+                        var descriptor = new DiagnosticDescriptor("TG001", "Missing parameter source", "Missing test generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
+                        Diagnostic diagnostic = Diagnostic.Create(descriptor, parameter.Locations[0]);
+                        yield return diagnostic;
+                    }
+                }
             }
         }
 
