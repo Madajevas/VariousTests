@@ -69,11 +69,8 @@ namespace TestsGenerator
                 dependencyGraph[test] = new List<IMethodSymbol>(test.Parameters.Length);
                 foreach (var param in test.Parameters)
                 {
-                    var dependency = tests.FirstOrDefault(t => SymbolEqualityComparer.Default.Equals(t.ReturnType, param.Type));
-                    if (dependency != null)
-                    {
-                        dependencyGraph[test].Add(dependency);
-                    }
+                    var dependency = tests.Where(t => SymbolEqualityComparer.Default.Equals(t.ReturnType, param.Type));
+                    dependencyGraph[test].AddRange(dependency);
                 }
             }
 
@@ -176,13 +173,26 @@ namespace TestsGenerator
             foreach (var testToDependencies in dependencyGraph)
             {
                 var test = testToDependencies.Key;
-                var dependencies = new HashSet<ITypeSymbol>(testToDependencies.Value.Select(d => d.ReturnType), SymbolEqualityComparer.Default);
+                var dependencies = testToDependencies.Value;
+
+                if (test.Parameters.Length == 0)
+                {
+                    continue;
+                }
 
                 foreach (var parameter in test.Parameters)
                 {
-                    if (!dependencies.Contains(parameter.Type))
+                    var requiredTests = dependencies.Where(d => d.ReturnType.Equals(parameter.Type, SymbolEqualityComparer.Default)).Take(2).ToArray();
+
+                    if (requiredTests.Length == 0)
                     {
                         var descriptor = new DiagnosticDescriptor("TG001", "Missing parameter source", "Missing test generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
+                        Diagnostic diagnostic = Diagnostic.Create(descriptor, parameter.Locations[0]);
+                        yield return diagnostic;
+                    }
+                    else if (requiredTests.Length > 1)
+                    {
+                        var descriptor = new DiagnosticDescriptor("TG002", "Ambiguous parameter source", "Multiple tests generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
                         Diagnostic diagnostic = Diagnostic.Create(descriptor, parameter.Locations[0]);
                         yield return diagnostic;
                     }

@@ -1,0 +1,21 @@
+﻿[
+  {
+    Location: /*
+    [MultistepParticipant]
+    public void AmbiguousParam(int ambiguous) {}
+                                   ^^^^^^^^^
+}
+*/
+ : (12,35)-(12,44),
+    Message: Multiple tests generating this parameter,
+    Severity: Error,
+    Descriptor: {
+      Id: TG002,
+      Title: Ambiguous parameter source,
+      MessageFormat: Multiple tests generating this parameter,
+      Category: TestsGenerator,
+      DefaultSeverity: Error,
+      IsEnabledByDefault: true
+    }
+  }
+]
