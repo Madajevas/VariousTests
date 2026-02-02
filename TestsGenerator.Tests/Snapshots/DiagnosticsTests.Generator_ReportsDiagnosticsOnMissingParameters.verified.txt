@@ -1,0 +1,23 @@
+﻿{
+  Diagnostics: [
+    {
+      Location: /*
+    [MultistepParticipant]
+    public void MissingParam(int missing) {}
+                                 ^^^^^^^
+}
+*/
+ : (6,33)-(6,40),
+      Message: Missing test generating this parameter,
+      Severity: Error,
+      Descriptor: {
+        Id: TM001,
+        Title: Missing dependant test,
+        MessageFormat: Missing test generating this parameter,
+        Category: TestsGenerator,
+        DefaultSeverity: Error,
+        IsEnabledByDefault: true
+      }
+    }
+  ]
+}
