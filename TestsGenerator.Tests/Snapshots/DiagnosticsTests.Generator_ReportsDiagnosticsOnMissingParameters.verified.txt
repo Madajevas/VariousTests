@@ -11,8 +11,8 @@
       Message: Missing test generating this parameter,
       Severity: Error,
       Descriptor: {
-        Id: TM001,
-        Title: Missing dependant test,
+        Id: TG001,
+        Title: Missing parameter source,
         MessageFormat: Missing test generating this parameter,
         Category: TestsGenerator,
         DefaultSeverity: Error,

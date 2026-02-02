@@ -66,7 +66,7 @@ namespace TestsGenerator
             var dependencyGraph = new Dictionary<IMethodSymbol, List<IMethodSymbol>>(SymbolEqualityComparer.Default);
             foreach (var test in tests)
             {
-                dependencyGraph[test] = new List<IMethodSymbol>();
+                dependencyGraph[test] = new List<IMethodSymbol>(test.Parameters.Length);
                 foreach (var param in test.Parameters)
                 {
                     var dependency = tests.FirstOrDefault(t => SymbolEqualityComparer.Default.Equals(t.ReturnType, param.Type));
