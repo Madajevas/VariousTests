@@ -25,7 +25,7 @@ namespace TestsGenerator.Tests
             ];
             CSharpCompilation compilation = CSharpCompilation.Create(assemblyName: "Tests", [syntaxTree], references);
 
-            var generator = new CustomSourceGenerator();
+            var generator = new MultistepTestsSourceGenerator();
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
             driver = driver.RunGenerators(compilation);
 
@@ -62,7 +62,7 @@ namespace TestsGenerator.Tests
             ];
             CSharpCompilation compilation = CSharpCompilation.Create(assemblyName: "Tests", [syntaxTree], references);
 
-            var generator = new CustomSourceGenerator();
+            var generator = new MultistepTestsSourceGenerator();
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
             driver = driver.RunGenerators(compilation);
 
