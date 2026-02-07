@@ -1,0 +1,21 @@
+﻿[
+  {
+    Location: /*
+    [MultistepParticipant]
+    public void MissingParam(int first, int second) {}
+                                            ^^^^^^
+}
+*/
+ : (9,44)-(9,50),
+    Message: Missing test generating this parameter,
+    Severity: Error,
+    Descriptor: {
+      Id: TG001,
+      Title: Missing parameter source,
+      MessageFormat: Missing test generating this parameter,
+      Category: TestsGenerator,
+      DefaultSeverity: Error,
+      IsEnabledByDefault: true
+    }
+  }
+]

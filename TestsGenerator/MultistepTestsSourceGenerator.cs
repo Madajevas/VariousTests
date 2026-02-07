@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#nullable enable
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -9,11 +11,41 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+
 namespace TestsGenerator
 {
     [Generator]
     public class MultistepTestsSourceGenerator : IIncrementalGenerator
     {
+        //static MultistepTestsSourceGenerator()
+        //{
+        //    AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+        //    {
+        //        var candidateName = $"{nameof(TestsGenerator)}.{args.Name.Split(',')[0]}.dll";
+        //        using Stream? resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(candidateName);
+
+        //        switch (resourceStream)
+        //        {
+        //            case Stream assembly:
+        //                using var ms = new MemoryStream();
+        //                assembly.CopyTo(ms);
+        //                ms.Position = 0;
+        //                return Assembly.Load(ms.ToArray())
+
+        //            default:
+        //                return null;
+        //        }
+
+        //        return resourceStream switch
+        //        {
+        //            Stream assembly => {
+        //                return null;
+        //            },
+        //            _ => null
+        //        };
+        //    };
+        //}
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             context.RegisterPostInitializationOutput(
@@ -25,21 +57,22 @@ namespace TestsGenerator
                 .CreateSyntaxProvider(
                     predicate: static (s, _) => HasAttributes(s), // quick filter
                     transform: static (ctx, _) => GetSemanticTarget(ctx)) // get symbol
-                .Where(static m => m is not null)!;
+                .Where(static m => m is not null);
 
             context.RegisterSourceOutput(
                 testClassDeclarations.Combine(context.CompilationProvider),
                 static (spc, pair) =>
                 {
-                    var (classSymbol, compilation) = pair;
-                    GenerateShadowTestClass(spc, classSymbol!, compilation);
+                    var (target, compilation) = pair;
+                    var (classSymbol, classSyntax) = target.Value;
+                    GenerateShadowTestClass(spc, classSymbol, classSyntax, compilation);
                 });
         }
 
         private static bool HasAttributes(SyntaxNode node) =>
             node is ClassDeclarationSyntax cds && cds.AttributeLists.Count > 0;
 
-        private static INamedTypeSymbol? GetSemanticTarget(GeneratorSyntaxContext context)
+        private static (INamedTypeSymbol, ClassDeclarationSyntax)? GetSemanticTarget(GeneratorSyntaxContext context)
         {
             if (!(context.Node is ClassDeclarationSyntax testClassDeclaration) || !(context.SemanticModel.GetDeclaredSymbol(testClassDeclaration) is INamedTypeSymbol symbol))
             {
@@ -51,7 +84,7 @@ namespace TestsGenerator
                 return null;
             }
 
-            return symbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, multistepAttribute)) ? symbol : null;
+            return symbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, multistepAttribute)) ? (symbol, testClassDeclaration) : null;
         }
 
         private static bool CompareTypes(ITypeSymbol left, ITypeSymbol right)
@@ -74,40 +107,69 @@ namespace TestsGenerator
             return false;
         }
 
-        private static void GenerateShadowTestClass(SourceProductionContext context, INamedTypeSymbol classSymbol, Compilation compilation)
+        private static void GenerateShadowTestClass(SourceProductionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classSyntax, Compilation compilation)
         {
-            var ns = classSymbol.ContainingNamespace.ToDisplayString();
-            var className = classSymbol.Name;
-
+            var methodsInOrder = classSyntax.Members
+                .OfType<MethodDeclarationSyntax>()
+                .Select(methodSyntax => methodSyntax.Identifier.Text)
+                .ToArray();
             var tests = classSymbol.GetMembers()
                 .OfType<IMethodSymbol>()
                 .Where(m => m.GetAttributes().Any(a => a.AttributeClass.Name.Equals("MultistepParticipantAttribute")))
-                .OrderBy(t => t.Parameters.Count())
+                .OrderBy(t => methodsInOrder.IndexOf(t.Name))
                 .ToArray();
-            var taskType = compilation.GetTypeByMetadataName("System.Threading.Tasks.Task`1");
-            var dependencyGraph = new Dictionary<IMethodSymbol, List<IMethodSymbol>>(SymbolEqualityComparer.Default);
+
+            bool skipGeneration = false;
+            var availableForInjection = new OrderedDictionary<ITypeSymbol, IMethodSymbol>(new AsyncOrNotSymbolEqualityComparer());
+            var dependencyGraph = new OrderedDictionary<IMethodSymbol, OrderedDictionary<IParameterSymbol, IMethodSymbol>>(SymbolEqualityComparer.Default);
             foreach (var test in tests)
             {
-                dependencyGraph[test] = new List<IMethodSymbol>(test.Parameters.Length);
-                foreach (var param in test.Parameters)
+                dependencyGraph[test] = new OrderedDictionary<IParameterSymbol, IMethodSymbol>(SymbolEqualityComparer.Default);
+
+                foreach (var parameter in test.Parameters)
                 {
-                    //var dependency = tests.Where(t => SymbolEqualityComparer.Default.Equals(t.ReturnType, param.Type) || SymbolEqualityComparer.Default.Equals(t.ReturnType, taskType.Construct(param.Type)));
-                    var dependency = tests.Where(t => CompareTypes(t.ReturnType, param.Type));
-                    dependencyGraph[test].AddRange(dependency);
+                    if (!availableForInjection.TryGetValue(parameter.Type, out var dependency))
+                    {
+                        skipGeneration = true;
+                        var descriptor = new DiagnosticDescriptor("TG001", "Missing parameter source", "Missing test generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
+                        Diagnostic diagnostic = Diagnostic.Create(descriptor, parameter.Locations[0]);
+                        context.ReportDiagnostic(diagnostic);
+                        continue;
+                    }
+                    availableForInjection.Remove(parameter.Type);
+
+                    dependencyGraph[test].Add(parameter, dependency);
+                }
+
+                if (!test.ReturnsVoid)
+                {
+                    if (availableForInjection.ContainsKey(test.ReturnType))
+                    {
+                        skipGeneration = true;
+                        var descriptor = new DiagnosticDescriptor("TG002", "There is not consumed param of this type", "Consume already produced parameter first", "TestsGenerator", DiagnosticSeverity.Error, true);
+                        Diagnostic diagnostic = Diagnostic.Create(descriptor, test.Locations[0]);
+                        context.ReportDiagnostic(diagnostic);
+                        continue;
+                    }
+
+                    availableForInjection.Add(test.ReturnType, test);
                 }
             }
-
-            var validationResults = Validate(dependencyGraph, compilation).ToArray();
-            foreach (var diagnostic in validationResults)
+            foreach (var availableValue in availableForInjection)
             {
+                var descriptor = new DiagnosticDescriptor("TG003", "Returned value is not consumed", "Returned value is not consumed", "TestsGenerator", DiagnosticSeverity.Warning, true);
+                Diagnostic diagnostic = Diagnostic.Create(descriptor, availableValue.Value.Locations[0]);
                 context.ReportDiagnostic(diagnostic);
             }
-            if (validationResults.Any())
+
+            if (skipGeneration)
             {
                 return;
             }
 
-            var sortedTests = TopologicalSort(dependencyGraph);
+
+            var ns = classSymbol.ContainingNamespace.ToDisplayString();
+            var className = classSymbol.Name;
 
             using var writer = new IndentedTextWriter(new StringWriter(), "    ");
 
@@ -123,9 +185,10 @@ namespace TestsGenerator
             writer.WriteLine("{");
             writer.Indent++;
 
-            for (var i = 0; i < sortedTests.Count; i++)
+            var keys = dependencyGraph.Keys;
+            for (var i = 0; i < keys.Length; i++)
             {
-                var test = tests[i];
+                var test = keys[i];
 
                 if (test.ReturnType is INamedTypeSymbol returnType)
                 {
@@ -164,14 +227,14 @@ namespace TestsGenerator
                     }
 
                     writer.Write($"this.{test.Name}(");
-                    var requires = dependencyGraph[test].ToDictionary(k => k.ReturnType, v => v, new AsyncOrNotSymbolEqualityComparer());
-                    for (var j = 0; j < test.Parameters.Count(); j++)
+                    var parameters = dependencyGraph[test].Keys;
+                    for (var j = 0; j < parameters.Length; j++)
                     {
-                        var param = test.Parameters[j];
-                        var requiredTest = requires[param.Type];
-                        requires.Remove(param.Type);
-                        writer.Write($"returnedFrom{requiredTest.Name}");
-                        if (j < test.Parameters.Count() - 1)
+                        var parameter = parameters[j];
+                        var dependency = dependencyGraph[test][parameter];
+
+                        writer.Write($"returnedFrom{dependency.Name}");
+                        if (j < parameters.Length - 1)
                         {
                             writer.Write(", ");
                         }

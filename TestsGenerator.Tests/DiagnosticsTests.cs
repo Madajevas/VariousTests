@@ -37,7 +37,7 @@ namespace TestsGenerator.Tests
         }
 
         [Test]
-        public async Task Generator_WhenThereIsAnAmbiguityInDependencies_ReportsDiagnostics()
+        public async Task Generator_WhenMultipleValuesOfSameTypeAreProduceBeforeConsumingAny_ReportsDiagnostics()
         {
             var source = """
                 using TestsGenerator.Abstractions;
@@ -53,6 +53,40 @@ namespace TestsGenerator.Tests
 
                     [MultistepParticipant]
                     public void AmbiguousParam(int ambiguous) {}
+                }
+                """;
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source);
+            IEnumerable<PortableExecutableReference> references =
+            [
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
+            ];
+            CSharpCompilation compilation = CSharpCompilation.Create(assemblyName: "Tests", [syntaxTree], references);
+
+            var generator = new MultistepTestsSourceGenerator();
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+            driver = driver.RunGenerators(compilation);
+
+            var results = driver.GetRunResult().Diagnostics;
+
+            await Verifier.Verify(results)
+                .UseDirectory("Snapshots")
+                .ToTask();
+        }
+
+        [Test]
+        public async Task Generator_WhenThereAreTwoParametersOfSameTypeBytOnlyOneProduced_ReportsDiagnostics()
+        {
+            var source = """
+                using TestsGenerator.Abstractions;
+
+                [Multistep]
+                internal partial class MissingParamTest
+                {
+                    [MultistepParticipant]
+                    public int SoloProducer() => 1;
+
+                    [MultistepParticipant]
+                    public void MissingParam(int first, int second) {}
                 }
                 """;
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source);

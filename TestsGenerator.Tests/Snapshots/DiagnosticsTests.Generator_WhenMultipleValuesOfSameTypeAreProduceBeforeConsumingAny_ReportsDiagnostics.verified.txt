@@ -1,0 +1,21 @@
+﻿[
+  {
+    Location: /*
+    [MultistepParticipant]
+    public int ParamProvider2() => 2;
+               ^^^^^^^^^^^^^^
+
+*/
+ : (9,15)-(9,29),
+    Message: Consume already produced parameter first,
+    Severity: Error,
+    Descriptor: {
+      Id: TG002,
+      Title: There is not consumed param of this type,
+      MessageFormat: Consume already produced parameter first,
+      Category: TestsGenerator,
+      DefaultSeverity: Error,
+      IsEnabledByDefault: true
+    }
+  }
+]

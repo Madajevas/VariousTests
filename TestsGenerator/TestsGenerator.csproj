@@ -9,6 +9,8 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
     <IsRoslynComponent>true</IsRoslynComponent>
+
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
