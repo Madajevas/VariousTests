@@ -10,6 +10,12 @@ namespace TestsToTest
         {
         }
 
+        [Test]
+        public void AATest()
+        {
+            return 1;
+        }
+
         [MultistepParticipant]
         public int Test1()
         {

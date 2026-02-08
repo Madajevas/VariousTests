@@ -6,46 +6,15 @@ using Microsoft.CodeAnalysis.Text;
 
 using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
 
 namespace TestsGenerator
 {
     [Generator]
     public class MultistepTestsSourceGenerator : IIncrementalGenerator
     {
-        //static MultistepTestsSourceGenerator()
-        //{
-        //    AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-        //    {
-        //        var candidateName = $"{nameof(TestsGenerator)}.{args.Name.Split(',')[0]}.dll";
-        //        using Stream? resourceStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(candidateName);
-
-        //        switch (resourceStream)
-        //        {
-        //            case Stream assembly:
-        //                using var ms = new MemoryStream();
-        //                assembly.CopyTo(ms);
-        //                ms.Position = 0;
-        //                return Assembly.Load(ms.ToArray())
-
-        //            default:
-        //                return null;
-        //        }
-
-        //        return resourceStream switch
-        //        {
-        //            Stream assembly => {
-        //                return null;
-        //            },
-        //            _ => null
-        //        };
-        //    };
-        //}
-
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             context.RegisterPostInitializationOutput(
@@ -255,71 +224,6 @@ namespace TestsGenerator
             writer.WriteLine("}"); // namespace
 
             context.AddSource($"{className}Multistep.Incremental.g.cs", SourceText.From(writer.InnerWriter.ToString(), Encoding.UTF8));
-        }
-
-        private static IEnumerable<Diagnostic> Validate(IReadOnlyDictionary<IMethodSymbol, List<IMethodSymbol>> dependencyGraph, Compilation compilation)
-        {
-            var taskType = compilation.GetTypeByMetadataName("System.Threading.Tasks.Task`1");
-            foreach (var testToDependencies in dependencyGraph)
-            {
-                var test = testToDependencies.Key;
-                var dependencies = testToDependencies.Value;
-
-                if (test.Parameters.Length == 0)
-                {
-                    continue;
-                }
-
-                foreach (var parameter in test.Parameters)
-                {
-                    var requiredTests = dependencies.Where(d => CompareTypes(d.ReturnType, parameter.Type)).Take(2).ToArray();
-
-                    if (requiredTests.Length == 0)
-                    {
-                        var descriptor = new DiagnosticDescriptor("TG001", "Missing parameter source", "Missing test generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
-                        Diagnostic diagnostic = Diagnostic.Create(descriptor, parameter.Locations[0]);
-                        yield return diagnostic;
-                    }
-                    else if (requiredTests.Length > 1)
-                    {
-                        var descriptor = new DiagnosticDescriptor("TG002", "Ambiguous parameter source", "Multiple tests generating this parameter", "TestsGenerator", DiagnosticSeverity.Error, true);
-                        Diagnostic diagnostic = Diagnostic.Create(descriptor, parameter.Locations[0]);
-                        yield return diagnostic;
-                    }
-                }
-            }
-        }
-
-        private static List<IMethodSymbol> TopologicalSort(Dictionary<IMethodSymbol, List<IMethodSymbol>> graph)
-        {
-            var sorted = new List<IMethodSymbol>();
-            var visited = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
-            var visiting = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
-
-            void Visit(IMethodSymbol node)
-            {
-                if (visited.Contains(node)) return;
-                if (visiting.Contains(node))
-                {
-                    throw new InvalidOperationException("Cyclic dependency detected in test methods.");
-                }
-
-                visiting.Add(node);
-                foreach (var dependency in graph[node])
-                {
-                    Visit(dependency);
-                }
-                visiting.Remove(node);
-                visited.Add(node);
-                sorted.Add(node);
-            }
-
-            foreach (var node in graph.Keys)
-            {
-                Visit(node);
-            }
-
-            return sorted;
         }
     }
 }
