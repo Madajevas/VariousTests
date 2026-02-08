@@ -56,26 +56,6 @@ namespace TestsGenerator
             return symbol.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, multistepAttribute)) ? (symbol, testClassDeclaration) : null;
         }
 
-        private static bool CompareTypes(ITypeSymbol left, ITypeSymbol right)
-        {
-            if (SymbolEqualityComparer.Default.Equals(left, right))
-            {
-                return true;
-            }
-
-            if (left is INamedTypeSymbol leftNs && leftNs.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")
-            {
-                return SymbolEqualityComparer.Default.Equals(leftNs.TypeArguments[0], right);
-            }
-
-            if (left is INamedTypeSymbol rightNs && rightNs.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")
-            {
-                return SymbolEqualityComparer.Default.Equals(left, rightNs.TypeArguments[0]);
-            }
-
-            return false;
-        }
-
         private static void GenerateShadowTestClass(SourceProductionContext context, INamedTypeSymbol classSymbol, ClassDeclarationSyntax classSyntax, Compilation compilation)
         {
             var methodsInOrder = classSyntax.Members
