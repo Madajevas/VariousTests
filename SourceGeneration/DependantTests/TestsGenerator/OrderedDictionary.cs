@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +68,14 @@ namespace TestsGenerator
             {
                 items.RemoveAt(index);
                 lookup.Remove(key);
+                foreach (var lookupEntry in lookup)
+                {
+                    if (lookupEntry.Value > index)
+                    {
+                        lookup[lookupEntry.Key]--;
+                    }
+                }
+
                 return true;
             }
 

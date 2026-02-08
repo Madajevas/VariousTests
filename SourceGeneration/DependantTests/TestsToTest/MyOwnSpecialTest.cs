@@ -10,12 +10,6 @@ namespace TestsToTest
         {
         }
 
-        [Test]
-        public void AATest()
-        {
-            return 1;
-        }
-
         [MultistepParticipant]
         public int Test1()
         {
@@ -23,17 +17,17 @@ namespace TestsToTest
         }
 
         [MultistepParticipant]
-        public void Test2(int outputOfTestBefore)
+        public int Test2(int outputOfTestBefore)
         {
             Assert.That(outputOfTestBefore, Is.EqualTo(42));
+
+            return outputOfTestBefore;
         }
 
         [MultistepParticipant]
-        public double Test3(int outputOfTestBefore)
+        public double Test3()
         {
-            Assert.That(outputOfTestBefore, Is.GreaterThan(0));
-
-            return (double)outputOfTestBefore;
+            return 42;
         }
 
         [MultistepParticipant]
